@@ -21,7 +21,7 @@ public class UserController {
             User user = new User();
             user.setEmail(data.get("email"));
             user.setPassword(data.get("password"));
-            User saveUser = userService.resisteruser(user);
+            User saveUser = userService.registerUser(user);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body("User registered successfully");
