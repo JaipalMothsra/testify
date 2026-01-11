@@ -1,6 +1,6 @@
 package com.jp.testify.controller;
 
-import com.jp.testify.Entity.User;
+import com.jp.testify.service.OtpService;
 import com.jp.testify.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,35 +12,69 @@ import java.util.Map;
 @RestController
 @RequestMapping("/user")
 public class UserController {
-    @Autowired
-    UserService userService;
 
-    @PostMapping("/regis")
-    public ResponseEntity<?> userregister(@RequestBody Map<String, String> data) {
+    @Autowired
+    private OtpService otpService;
+
+    @Autowired
+    private UserService userService;
+
+    // ==================================================
+    // 1️⃣ REGISTER (GENERATE OTP ONLY)
+    // ==================================================
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody Map<String, String> data) {
+
         try {
-            User user = new User();
-            user.setEmail(data.get("email"));
-            user.setPassword(data.get("password"));
-            User saveUser = userService.registerUser(user);
+            String email = data.get("email");
+            String password = data.get("password");
+
+            if (email == null || password == null) {
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body("Email or password missing");
+            }
+
+            // 👉 OTP generate + save + email send
+            otpService.generateAndSaveOtp(email, password);
+
             return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body("User registered successfully");
+                    .status(HttpStatus.OK)
+                    .body("OTP sent to your email");
 
         } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-        }
-
-
-    }
-    @PostMapping("/login")
-    public ResponseEntity<?>userlogin(@RequestBody Map<String,String>data){
-        try{
-         User user=userService.loginUser(data.get("email"),data.get("password"));
             return ResponseEntity
-                    .ok("Login successful");
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(ex.getMessage());
         }
-        catch (RuntimeException ex){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
+    }
+
+    // ==================================================
+    // 2️⃣ LOGIN (ONLY VERIFIED USERS)
+    // ==================================================
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Map<String, String> data) {
+
+        try {
+            String email = data.get("email");
+            String password = data.get("password");
+
+            if (email == null || password == null) {
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body("Email or password missing");
+            }
+
+            userService.loginUser(email, password);
+
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body("Login successful");
+
+        } catch (RuntimeException ex) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(ex.getMessage());
         }
     }
 }
