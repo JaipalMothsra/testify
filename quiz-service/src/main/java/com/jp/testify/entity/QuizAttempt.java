@@ -29,7 +29,7 @@ public class QuizAttempt {
     @Column(name = "total_questions",nullable = false)
     private Integer totalQuestions;
     @Column(name = "duration_minutes",nullable = false)
-    private Integer durationInMinutes;
+    private Integer durationInMinutes; 
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
     @Column(name = "end_time")
