@@ -1,27 +1,18 @@
-package com.jp.testify.entity;
+package com.jp.testify.dto;
 
-import jakarta.persistence.*;
-
-@Entity
-public class QuizResult {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class QuizResultResponseDTO {
 
     private int score;
     private double percentage;
     private String level;
 
-    @OneToOne
-    @JoinColumn(name = "attempt_id")
-    private QuizAttempt attempt;
-
-    public QuizResult() {
+    public QuizResultResponseDTO() {
     }
 
-    public Long getId() {
-        return id;
+    public QuizResultResponseDTO(int score, double percentage, String level) {
+        this.score = score;
+        this.percentage = percentage;
+        this.level = level;
     }
 
     public int getScore() {
@@ -46,13 +37,5 @@ public class QuizResult {
 
     public void setLevel(String level) {
         this.level = level;
-    }
-
-    public QuizAttempt getAttempt() {
-        return attempt;
-    }
-
-    public void setAttempt(QuizAttempt attempt) {
-        this.attempt = attempt;
     }
 }
