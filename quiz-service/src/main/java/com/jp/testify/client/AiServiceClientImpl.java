@@ -1,60 +1,52 @@
 package com.jp.testify.client;
 
 import com.jp.testify.configuration.AiProperties;
-import com.jp.testify.exception.AiClientException;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class AiServiceClientImpl implements AiServiceClient {
 
-    private final RestTemplate restTemplate;
+    private final RestTemplate restTemplate = new RestTemplate();
     private final AiProperties aiProperties;
 
-    public AiServiceClientImpl(RestTemplate restTemplate, AiProperties aiProperties) {
-        this.restTemplate = restTemplate;
+    public AiServiceClientImpl(AiProperties aiProperties) {
         this.aiProperties = aiProperties;
     }
 
     @Override
     public String callAi(String prompt) {
-        try {
-            // 1. Headers
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth(aiProperties.getApiKey());
 
-            // 2. Request Body
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", aiProperties.getModel());
-            requestBody.put("prompt", prompt);
-            requestBody.put("max_tokens", 1000);
+        // ✅ API key URL me append karo
+        String url = aiProperties.getApiUrl()
+                + "?key=" + aiProperties.getApiKey();
 
-            HttpEntity<Map<String, Object>> entity =
-                    new HttpEntity<>(requestBody, headers);
+        Map<String, Object> part = new HashMap<>();
+        part.put("text", prompt);
 
-            // 3. API Call
-            ResponseEntity<String> response = restTemplate.exchange(
-                    aiProperties.getBaseUrl(),
-                    HttpMethod.POST,
-                    entity,
-                    String.class
-            );
+        Map<String, Object> content = new HashMap<>();
+        content.put("parts", List.of(part));
 
-            // 4. Response validation
-            if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
-                throw new AiClientException("Invalid response from AI service");
-            }
+        Map<String, Object> body = new HashMap<>();
+        body.put("contents", List.of(content));
 
-            return response.getBody();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-        } catch (RestClientException ex) {
-            throw new AiClientException("Error while calling AI service", ex);
-        }
+        HttpEntity<Map<String, Object>> entity =
+                new HttpEntity<>(body, headers);
+
+        ResponseEntity<String> response =
+                restTemplate.exchange(
+                        url,
+                        HttpMethod.POST,
+                        entity,
+                        String.class
+                );
+
+        return response.getBody();
     }
 }
